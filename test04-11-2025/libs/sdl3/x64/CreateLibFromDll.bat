@@ -5,6 +5,8 @@ echo ========================================
 echo Creating .lib from .dll
 echo ========================================
 
+call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+
 if "%~1"=="" (
   echo Usage: %~nx0 "path\to\file.dll" [architecture]
   echo Example: %~nx0 "SDL3.dll" x64

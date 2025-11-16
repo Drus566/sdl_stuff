@@ -4,7 +4,7 @@
 
 int main(int argc, char* argv[]) {
     // Инициализация чтобы было видно джойстик
-    SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC );
+    SDL_Init(SDL_HINT_JOYSTICK_THREAD);
     if (!SDL_HasGamepad()) {
         printf("No gamepads connected\n");
         SDL_Quit();

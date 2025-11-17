@@ -1,78 +1,50 @@
-#include <SDL3/SDL.h>
+#include "SDL3/SDL.h"
+#include "SDL3_ttf/SDL_ttf.h"
+
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 int main(int argc, char* argv[]) {
-    // Инициализация чтобы было видно джойстик
-    SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_HINT_JOYSTICK_THREAD);
-    if (!SDL_HasGamepad()) {
-        printf("No gamepads connected\n");
-        SDL_Quit();
-        return 0;
+    SDL_Init(SDL_INIT_VIDEO);
+    TTF_Init();
+
+    // Create SDL Window
+    SDL_Window* window = SDL_CreateWindow("SDL3 Unicode Texts", 420, 300, SDL_WINDOW_RESIZABLE);
+    if (!window) {
+        std::cerr << "Failed to create window: " << SDL_GetError() << std::endl;
+        return -1;
     }
 
-    int count = 0;
-    SDL_JoystickID *ids = SDL_GetGamepads(&count);
-    SDL_Gamepad* gamepad = NULL;
-
-    // Iterate over the list of gamepads
-    for(int i = 0; i < count; i++) {
-        SDL_Gamepad* gamepd = SDL_OpenGamepad(ids[i]);
-        if(gamepad == NULL) {
-            gamepad = gamepd;
-        }
-
-        printf("Gamepad connected: %s\n", SDL_GetGamepadName(gamepd));
-
-        // Close the other gamepads
-        if(i > 0) {
-            SDL_CloseGamepad(gamepd);
-        }
+    // Create Renderer
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
+    if (!renderer) {
+        std::cerr << "Failed to create renderer: " << SDL_GetError() << std::endl;
+        SDL_DestroyWindow(window);
+        return -1;
     }
-    if (!gamepad) {
-        printf("Failed to open gamepad: %s\n", SDL_GetError());
-        SDL_Quit();
+
+    // Load Font with SDL3_tff
+    TTF_Font* font = TTF_OpenFont("KosugiMaru-Regular.ttf", 16);
+    if (!font) {
+        std::cerr << "Failed to load font: " << SDL_GetError() << std::endl;
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        return -1;
+    }
+
+    // UTF-8 текст для SDL
+    char japanese_text[] = u8"申し訳ございませんがたくさんあります。";
+    size_t text_length_chars = utf8_strlen(japanese_text);
+
+
+    // Создаем массив для поверхностей
+    SDL_Surface** surfaces = malloc(text_length_chars * sizeof(SDL_Surface*));
+    if (!surfaces) {
+        fprintf(stderr, "Ошибка выделения памяти\n");
         return 1;
     }
 
-    bool running = true;
-    SDL_Event event;
-    const int DEADZONE = 9000;
 
-
-    while (running) {
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-                case SDL_EVENT_QUIT:
-                    running = false;
-                    break;
-                
-                case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
-                    printf("Button pressed: %s\n", SDL_GetGamepadStringForButton((SDL_GamepadButton)event.gbutton.button));
-                    break;
-
-                case SDL_EVENT_GAMEPAD_BUTTON_UP:
-                    printf("Button released: %s\n", SDL_GetGamepadStringForButton((SDL_GamepadButton)event.gbutton.button));
-                    break;
-
-                case SDL_EVENT_GAMEPAD_AXIS_MOTION:
-                    printf("Axis moved: %s, Value: %d\n", SDL_GetGamepadStringForAxis((SDL_GamepadAxis)event.gaxis.axis), event.gaxis.value);
-
-                    if(event.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTX && event.gaxis.value > DEADZONE) {
-                        printf("left axis right\n");
-                    } else if(event.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTX && event.gaxis.value < -DEADZONE) {
-                        printf("left axis left\n");
-                    }
-
-                    if(event.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTY && event.gaxis.value > DEADZONE) {
-                                printf("left axis down\n");
-                    } else if(event.gaxis.axis == SDL_GAMEPAD_AXIS_LEFTY && event.gaxis.value < -DEADZONE) {
-                        printf("left axis up\n");
-                    }
-                    break;
-            }
-        }
-        SDL_Delay(16); // Sleep 16ms (~60FPS)
-    }
-
+    return 0;
 }
